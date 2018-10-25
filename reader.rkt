@@ -2,15 +2,15 @@
 (require racket/contract)
 (require (only-in racket/function identity))
 
-(define (tokenize-line [in (current-input-port)])
+(define (tokenize [in (current-input-port)])
   (define reversed (tokenize-line/reverse in))
   (if (eof-object? reversed)
       eof
       (reverse reversed)))
-(provide/contract [tokenize-line (->* () (input-port?)
-                                  (or/c
-                                   (listof (or/c symbol? number?))
-                                   eof-object?))])
+(provide/contract [tokenize (->* () (input-port?)
+                                 (or/c
+                                  (listof (or/c symbol? number?))
+                                  eof-object?))])
 
 (define (tokenize-line/reverse in)
   (define tokens (parse-token in (open-output-string) '()))
