@@ -17,9 +17,6 @@
   (if (eof-object? tokens)
       eof
       (map token->value tokens)))
-(provide/contract [read-line/reverse (-> input-port?
-                                         (or/c (listof (or/c string? number?))
-                                               eof-object?))])
 
 (define (parse-token in token-port tokens)
   (define c (read-char in))
