@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/contract)
+(require syntax/strip-context)
 (require "tokenizer.rkt")
 
 (define current-outer (make-parameter #f))
@@ -14,7 +15,7 @@
       (let-values ([(tokens words stack)
                     (read-tokens in tokens '() '())])
         (if (null? tokens)
-            (values (reverse words) (reverse stack))
+            (list (reverse words) (reverse stack))
             (error 'read "error")))))
 
 (define (next-token in tokens)
@@ -93,3 +94,6 @@
                     (cons `(if ,(reverse then-stack)
                                ,(reverse else-stack))
                           stack))])))
+
+(define (read-syntax src in)
+  (strip-context (datum->syntax #f (read in))))
