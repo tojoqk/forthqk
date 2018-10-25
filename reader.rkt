@@ -2,6 +2,20 @@
 (require racket/contract)
 (require (only-in racket/function identity))
 
+(define (read [in (current-input-port)])
+  (define vals (read-line/reverse in))
+  (if (eof-object? vals)
+      eof
+      (let loop ([vals vals]
+                 [acc '()])
+        (if (eof-object? vals)
+            (reverse acc)
+            (loop (read-line/reverse in) (append vals acc))))))
+(provide/contract [read (->* () (input-port?)
+                             (or/c
+                              (listof (or/c symbol? number?))
+                              eof-object?))])
+
 (define (read-line [in (current-input-port)])
   (define reversed (read-line/reverse in))
   (if (eof-object? reversed)
