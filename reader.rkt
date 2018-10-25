@@ -3,7 +3,7 @@
 (require (only-in racket/function identity))
 
 (define (tokenize [in (current-input-port)])
-  (define reversed (tokenize-line/reverse in))
+  (define reversed (tokenize/reverse in))
   (if (eof-object? reversed)
       eof
       (reverse reversed)))
@@ -12,7 +12,7 @@
                                   (listof (or/c symbol? number?))
                                   eof-object?))])
 
-(define (tokenize-line/reverse in)
+(define (tokenize/reverse in)
   (define tokens (parse-token in (open-output-string) '()))
   (if (eof-object? tokens)
       eof
