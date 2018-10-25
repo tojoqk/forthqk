@@ -3,7 +3,7 @@
 (require (only-in racket/function identity))
 
 (define (read-line [in (current-input-port)])
-  (define reversed (read/reverse in))
+  (define reversed (read-line/reverse in))
   (if (eof-object? reversed)
       eof
       (reverse reversed)))
@@ -12,14 +12,14 @@
                                    (listof (or/c symbol? number?))
                                    eof-object?))])
 
-(define (read/reverse in)
+(define (read-line/reverse in)
   (define tokens (parse-token in (open-output-string) '()))
   (if (eof-object? tokens)
       eof
       (map token->value tokens)))
-(provide/contract [read/reverse (-> input-port?
-                                    (or/c (listof (or/c string? number?))
-                                          eof-object?))])
+(provide/contract [read-line/reverse (-> input-port?
+                                         (or/c (listof (or/c string? number?))
+                                               eof-object?))])
 
 (define (parse-token in token-port tokens)
   (define c (read-char in))
