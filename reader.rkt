@@ -19,7 +19,7 @@
       (map token->value tokens)))
 
 (define (parse-token in token-port tokens)
-  (define c (tokenize-char in))
+  (define c (read-char in))
   (define (token-port->token token-port)
     (define token (get-output-string token-port))
     (if (zero? (string-length token))
@@ -49,10 +49,10 @@
   (cond
     [(eof-object? c) eof]
     [(char=? c #\newline)
-     (tokenize-char in)
+     (read-char in)
      tokens]
     [(char-whitespace? c)
-     (tokenize-char in)
+     (read-char in)
      (skip-whitespace in tokens)]
     [else
      (parse-token in (open-output-string) tokens)]))
