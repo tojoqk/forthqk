@@ -9,7 +9,7 @@
       (reverse reversed)))
 (provide/contract [tokenize (->* () (input-port?)
                                  (or/c
-                                  (listof (or/c symbol? number?))
+                                  (listof (or/c symbol? number? boolean?))
                                   eof-object?))])
 
 (define (tokenize/reverse in)
@@ -60,4 +60,6 @@
 (define (token->value token)
   (cond
     [(string->number token) => identity]
+    [(string=? token "#t") #t]
+    [(string=? token "#f") #f]
     [else (string->symbol token)]))
