@@ -1,4 +1,4 @@
-#lang racket/base
+#lang racket
 (require racket/contract)
 (require syntax/strip-context)
 (require "tokenizer.rkt")
@@ -30,6 +30,7 @@
         (if (null? tokens)
             (list (reverse words) (reverse stack))
             (error 'read "error")))))
+(provide read)
 
 (define (next-token in tokens)
   (cond
@@ -109,4 +110,7 @@
                           stack))])))
 
 (define (read-syntax src in)
-  (strip-context (datum->syntax #f (read in))))
+  (define datum `(module forthqk-mod forthqk/expander
+                   ,(read-all in)))
+  (datum->syntax #f datum))
+(provide read-syntax)
