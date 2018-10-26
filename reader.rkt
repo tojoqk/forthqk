@@ -8,6 +8,19 @@
 (define (inner?)
   (current-outer))
 
+(define (read-all in)
+  (let loop ([result (read in)]
+             [words '()]
+             [stack '()])
+    (cond
+      [(eof-object? result)
+       (list words stack)]
+      [else
+       (match-define (list words* stack*) result)
+       (loop (read in)
+             (append words words*)
+             (append stack stack*))])))
+
 (define (read [in (current-input-port)])
   (define tokens (tokenize in))
   (if (eof-object? tokens)
