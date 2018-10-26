@@ -1,0 +1,6 @@
+#lang forthqk
+: factorial dup 1 = if drop 1 else dup 1 - factorial * then ;
+
+1 factorial .
+5 factorial .
+10 factorial .
