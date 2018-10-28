@@ -14,13 +14,19 @@
         (void))]))
 (provide (rename-out [forthqk-module-begin #%module-begin]))
 
-(define-syntax-rule (IF (t ...) (e ...))
-  (lambda (stack)
-    (let ([expr (car stack)])
-      (if expr
-          (%execute (cdr stack) (list t ...))
-          (%execute (cdr stack) (list e ...))))))
-(provide IF)
+(define-syntax (%if x)
+  (syntax-case x ()
+    [(_ (t ... tl) (e ... el))
+     #`(lambda (stack)
+         (let ([expr (car stack)])
+           (if expr
+               #,(if (number? (syntax->datum #'tl))
+                     #'(%execute (cdr stack) (list t ... tl))
+                     #'(tl (%execute (cdr stack) (list t ...))))
+               #,(if (number? (syntax->datum #'el))
+                     #'(%execute (cdr stack) (list e ... el))
+                     #'(el (%execute (cdr stack) (list e ...)))))))]))
+(provide %if)
 
 (define (%execute stack exprs)
   (for/fold ([stack stack])
