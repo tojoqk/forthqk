@@ -5,13 +5,14 @@
 
 (define-syntax (forthqk-module-begin x)
   (syntax-case x ()
-    [(k (((WORD BODY  ...) ...)
-         (EXPR ...)))
+    [(_ (((word body  ...) ...)
+         (expr ...)))
      #`(#%module-begin
-        (%define-word WORD (BODY ...))
+        (%define-word word (body ...))
         ...
-        (%execute '() (list EXPR ...))
-        (void))]))
+        (begin
+          (%execute '() (list expr ...))
+          (void)))]))
 (provide (rename-out [forthqk-module-begin #%module-begin]))
 
 (define-syntax (%if x)
