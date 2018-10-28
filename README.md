@@ -1,5 +1,5 @@
 # forthqk
-Implementation of Forth
+Concatnative language like forth.
 
 # Install
 ```
