@@ -105,7 +105,7 @@
       [else
        (read-tokens in tokens
                     words
-                    (cons `(%if ,(reverse then-stack)
+                    (cons `(if ,(reverse then-stack)
                                ,(reverse else-stack))
                           stack))])))
 

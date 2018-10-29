@@ -27,7 +27,7 @@
                #,(if (number? (syntax->datum #'el))
                      #'(%execute (cdr stack) (list e ... el))
                      #'(el (%execute (cdr stack) (list e ...)))))))]))
-(provide %if)
+(provide (rename-out [%if if]))
 
 (define (%execute stack exprs)
   (for/fold ([stack stack])
