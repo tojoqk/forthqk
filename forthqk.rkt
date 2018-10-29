@@ -1,6 +1,7 @@
 #lang racket/base
 (require "reader.rkt")
 (require (except-in "expander.rkt" #%module-begin))
+(require "stack.rkt")
 
 (define (repl)
   (parameterize ([current-namespace

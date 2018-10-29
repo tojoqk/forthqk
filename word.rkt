@@ -1,5 +1,7 @@
 #lang racket
 (require (for-syntax racket))
+(require "stack.rkt")
+
 (define-syntax (provide/forthqk x)
   (syntax-case x ()
     [(_ f n m)
@@ -9,11 +11,12 @@
                      [(r ...) (generate-temporaries (range m))])
          #`(begin
              (define (func stack)
-               (let*-values ([(g stack) (values (car stack) (cdr stack))]
-                             ...)
+               (let* ([g (stack-pop! stack)]
+                      ...)
                  (define-values (r ...)
                    (#,@(cons #'f (reverse (syntax->list #'(g ...))))))
-                 (list* #,@(reverse (syntax->list #'(r ...))) stack)))
+                 (stack-push! stack r) ...
+                 stack))
              (provide (rename-out [func f])))))]))
 
 (provide/forthqk + 2 1)
@@ -48,6 +51,6 @@
 
 (define (dump stack)
   (newline)
-  (display (reverse stack))
+  (display (reverse (stack->list stack)))
   stack)
 (provide dump)
