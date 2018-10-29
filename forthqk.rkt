@@ -6,7 +6,7 @@
   (parameterize ([current-namespace
                   (make-base-empty-namespace)])
     (namespace-require 'forthqk/expander)
-    (let loop ([stack '()])
+    (let loop ([stack (make-stack)])
       (flush-output)
       (define result (read))
       (cond

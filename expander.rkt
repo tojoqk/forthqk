@@ -1,6 +1,7 @@
 #lang racket
 (provide #%datum #%app #%top #%top-interaction)
 (require "word.rkt")
+(require "stack.rkt")
 (provide (all-from-out "word.rkt"))
 
 (define-syntax (forthqk-module-begin x)
@@ -11,7 +12,7 @@
         (%define-word word (body ...))
         ...
         (begin
-          (%execute '() (list expr ...))
+          (%execute (make-stack) (list expr ...))
           (void)))]))
 (provide (rename-out [forthqk-module-begin #%module-begin]))
 
@@ -19,22 +20,24 @@
   (syntax-case x ()
     [(_ (t ... tl) (e ... el))
      #`(lambda (stack)
-         (let ([expr (car stack)])
+         (let ([expr (stack-pop! stack)])
            (if expr
-               #,(if (number? (syntax->datum #'tl))
-                     #'(%execute (cdr stack) (list t ... tl))
-                     #'(tl (%execute (cdr stack) (list t ...))))
+               #,(cond [(number? (syntax->datum #'tl))
+                        #'(%execute stack (list t ... tl))]
+                       [else
+                        #'(tl (%execute stack (list t ...)))])
                #,(if (number? (syntax->datum #'el))
-                     #'(%execute (cdr stack) (list e ... el))
-                     #'(el (%execute (cdr stack) (list e ...)))))))]))
+                     #'(%execute stack (list e ... el))
+                     #'(el (%execute stack (list e ...)))))))]))
 (provide (rename-out [%if if]))
 
 (define (%execute stack exprs)
   (for/fold ([stack stack])
             ([expr exprs])
-    (if (procedure? expr)
-        (expr stack)
-        (cons expr stack))))
+    (cond [(procedure? expr)
+           (expr stack)]
+          [(stack-push! stack expr)
+           stack])))
 (provide %execute)
 
 (define-syntax (%define-word x)
