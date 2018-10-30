@@ -7,7 +7,7 @@
                [word-table : Word-Table])
   #:mutable)
 (define-type Exprs (U (Listof Expr)))
-(define-type Expr (U Fixnum Symbol If-Expr Define-Expr))
+(define-type Expr (U Atom Symbol If-Expr Define-Expr))
 (define-type If-Expr (List 'if Exprs Exprs))
 (define-type Define-Expr (Pair ': (Pair Symbol Exprs)))
 (define-type Word-Table (Immutable-HashTable Symbol Word))
@@ -16,47 +16,47 @@
 (require/typed "reader.rkt"
   [read (->* () (Input-Port) Exprs)])
 
-(: eval (-> state Exprs state))
-(define (eval s es)
+(: eval (->* (Exprs) (state) state))
+(define (eval es [s (current-state)])
   (if (null? es)
       s
       (let ([e (car es)]
             [es (cdr es)])
         (cond
-          [(fixnum? e)
+          [(atom? e)
            (stack-push! (state-stack s) e)
-           (eval s es)]
+           (eval es s)]
           [(symbol? e)
-           (eval-word s e es)]
+           (eval-word e es s)]
           [(eq? 'if (car e))
-           (eval-if s e es)]
+           (eval-if e es s)]
           [(eq? ': (car e))
-           (eval-: s e es)]
+           (eval-: e es s)]
           [else
            (error 'error "?")]))))
 (provide eval)
 
-(: eval-word (-> state Symbol Exprs state))
-(define (eval-word s e es)
-  (eval ((hash-ref (state-word-table s) e) s)
-        es))
+(: eval-word (-> Symbol Exprs state state))
+(define (eval-word e es s)
+  (eval es
+        ((hash-ref (state-word-table s) e) s)))
 
-(: eval-if (-> state If-Expr Exprs state))
-(define (eval-if s e es)
+(: eval-if (-> If-Expr Exprs state state))
+(define (eval-if e es s)
   (if (fx= 0 (stack-pop! (state-stack s)))
-      (eval s (cadr e))
-      (eval s (caddr e))))
+      (eval (caddr e) s)
+      (eval (cadr e) s)))
 
-(: eval-: (-> state Define-Expr Exprs state))
-(define (eval-: s e es)
+(: eval-: (-> Define-Expr Exprs state state))
+(define (eval-: e es s)
   (set-state-word-table!
    s
    ((inst hash-set Symbol Word)
     (state-word-table s)
     (car (cdr e))
     (let ([body : Exprs (cdr (cdr e))])
-      (lambda ([s : state]) (eval s body)))))
-  s)
+      (lambda ([s : state]) (eval body s)))))
+  (eval es s))
 
 (define-syntax (define/forthqk x)
   (syntax-case x ()
@@ -71,18 +71,18 @@
                   'name
                   (lambda ([s : state])
                     (let* ([st : stack (state-stack s)]
-                           [g : Fixnum (stack-pop! st)]
+                           [g : Atom (stack-pop! st)]
                            ...)
                       (let-values
-                          ([([r : Fixnum] ...)
+                          ([([r : Atom] ...)
                             (#,@(cons
-                                 #'(lambda ([args : Fixnum] ...)
+                                 #'(lambda ([args : Atom] ...)
                                      body ...)
                                  (reverse (syntax->list #'(g ...)))))])
                         (stack-push! st r) ...
                         s)))))))]))
 
-(define primitive
+(define primitive-word-table
   (let ([wt : Word-Table (hash)])
     (define/forthqk (+ x y) wt 1
       (fx+ x y))
@@ -92,6 +92,8 @@
       (fx- x y))
     (define/forthqk (= x y) wt 1
       (if (fx= x y) 1 0))
+    (define/forthqk (< x y) wt 1
+      (if (fx< x y) 1 0))
 
     (define/forthqk (swap x y) wt 2
       (values y x))
@@ -126,3 +128,10 @@
                 (reverse (stack->list st)))
                s))))
     wt))
+(provide primitive-word-table)
+
+(: current-state (Parameterof state))
+(define current-state (make-parameter
+                       (state (make-stack)
+                              primitive-word-table)))
+(provide current-state)

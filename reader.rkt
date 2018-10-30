@@ -25,11 +25,13 @@
              (append exprs result))])))
 
 (define (read [in (current-input-port)])
-  (define tokens (map token->value (tokenize in)))
+  (define tokens (tokenize in))
   (if (eof-object? tokens)
       eof
       (let-values ([(tokens exprs)
-                    (read-tokens in tokens '())])
+                    (read-tokens in
+                                 (map token->value tokens)
+                                 '())])
         (if (null? tokens)
             (reverse exprs)
             (error 'read "error")))))
@@ -102,9 +104,8 @@
                             ,(reverse else-exprs))
                        exprs))))
 
-;; (define (read-syntax src in)
-;;   (define datum `(module forthqk-mod forthqk/expander
-;;                    typed/racket
-;;                    ,(read-all in)))
-;;   (datum->syntax #f datum))
-;; (provide read-syntax)
+(define (read-syntax src in)
+  (define datum `(module forthqk-mod forthqk/expander
+                   ,(read-all in)))
+  (datum->syntax #f datum))
+(provide read-syntax)

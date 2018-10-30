@@ -1,8 +1,13 @@
 #lang typed/racket
 (require racket/fixnum)
 
+(define-type Atom (U Fixnum))
+(provide Atom)
+(define-predicate atom? Atom)
+(provide atom?)
+
 (struct stack ([index : Fixnum]
-               [data : (Vectorof Fixnum)])
+               [data : (Vectorof Atom)])
   #:mutable)
 (provide stack)
 
@@ -11,7 +16,7 @@
   (stack 0 (make-vector 4096)))
 (provide make-stack)
 
-(: stack-push! (-> stack Fixnum Void))
+(: stack-push! (-> stack Atom Void))
 (define (stack-push! s v)
   (let ([idx (stack-index s)]
         [dat (stack-data s)])
@@ -19,7 +24,7 @@
     (set-stack-index! s (fx+ idx 1))))
 (provide stack-push!)
 
-(: stack-pop! (-> stack Fixnum))
+(: stack-pop! (-> stack Atom))
 (define (stack-pop! s)
   (let ([idx (stack-index s)]
         [dat (stack-data s)])
@@ -27,7 +32,7 @@
       (set-stack-index! s (fx- idx 1)))))
 (provide stack-pop!)
 
-(: stack->list (-> stack (Listof Fixnum)))
+(: stack->list (-> stack (Listof Atom)))
 (define (stack->list s)
   (let ([idx (stack-index s)]
         [dat (stack-data s)])
