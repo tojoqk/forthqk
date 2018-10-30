@@ -8,27 +8,32 @@
 (define (inner?)
   (current-outer))
 
+(define (token->value token)
+  (cond
+    [(string->number token) => identity]
+    [(string=? token "#t") #t]
+    [(string=? token "#f") #f]
+    [else (string->symbol token)]))
+
 (define (read-all in)
   (let loop ([result (read in)]
-             [words '()]
-             [stack '()])
+             [exprs '()])
     (cond
-      [(eof-object? result)
-       (list words stack)]
+      [(eof-object? result) exprs]
       [else
-       (match-define (list words* stack*) result)
        (loop (read in)
-             (append words words*)
-             (append stack stack*))])))
+             (append exprs result))])))
 
 (define (read [in (current-input-port)])
   (define tokens (tokenize in))
   (if (eof-object? tokens)
       eof
-      (let-values ([(tokens words stack)
-                    (read-tokens in tokens '() '())])
+      (let-values ([(tokens exprs)
+                    (read-tokens in
+                                 (map token->value tokens)
+                                 '())])
         (if (null? tokens)
-            (list (reverse words) (reverse stack))
+            (reverse exprs)
             (error 'read "error")))))
 (provide read)
 
@@ -50,64 +55,54 @@
     [else
      (values (car tokens) (cdr tokens))]))
 
-(define (read-tokens in tokens words stack)
+(define (read-tokens in tokens exprs)
   (let-values ([(token tokens) (next-token in tokens)])
     (cond
       [(eof-object? token)
-       (values tokens words stack)]
+       (values tokens exprs)]
       [(eq? token ':)
-       (read-define in tokens words stack)]
+       (read-define in tokens exprs)]
       [(eq? token '|;|)
        (if (eq? (current-outer) ':)
-           (values tokens words stack)
+           (values tokens exprs)
            (error 'read "unexpected \";\""))]
       [(eq? token 'if)
-       (read-if in tokens words stack)]
+       (read-if in tokens exprs)]
       [(eq? token 'else)
        (if (eq? (current-outer) 'if)
-           (values tokens words stack)
+           (values tokens exprs)
            (error 'read "unexpected \"else\""))]
       [(eq? token 'then)
        (if (eq? (current-outer) 'else)
-           (values tokens words stack)
+           (values tokens exprs)
            (error 'read "unexpected \"then\""))]
       [else
-       (read-tokens in tokens words (cons token stack))])))
+       (read-tokens in tokens (cons token exprs))])))
 
-(define (read-define in tokens words stack)
+(define (read-define in tokens exprs)
   (let-values
-      ([(tokens word words* stack*)
+      ([(tokens word exprs*)
         (parameterize ([current-outer ':])
           (let*-values ([(word tokens) (next-token in tokens)]
-                        [(tokens words* stack*)
-                         (read-tokens in tokens '() '())])
-            (values tokens word words* stack*)))])
-    (cond
-      [(not (null? words*))
-       (error 'read "can't nest \":\"")]
-      [else
-       (read-tokens in tokens
-                    (cons (cons word (reverse stack*)) words)
-                    stack)])))
+                        [(tokens exprs*)
+                         (read-tokens in tokens '())])
+            (values tokens word exprs*)))])
+    (read-tokens in tokens
+                 (cons `(: ,word ,@(reverse exprs*))
+                       exprs))))
 
-(define (read-if in tokens words stack)
+(define (read-if in tokens exprs)
   (let*-values
-      ([(tokens then-words then-stack)
+      ([(tokens then-exprs)
         (parameterize ([current-outer 'if])
-          (read-tokens in tokens '() '()))]
-       [(tokens else-words else-stack)
+          (read-tokens in tokens '()))]
+       [(tokens else-exprs)
         (parameterize ([current-outer 'else])
-          (read-tokens in tokens '() '()))])
-    (cond
-      [(not (and (null? then-words)
-                 (null? else-words)))
-       (error 'read "unexpected \":\"")]
-      [else
-       (read-tokens in tokens
-                    words
-                    (cons `(IF ,(reverse then-stack)
-                               ,(reverse else-stack))
-                          stack))])))
+          (read-tokens in tokens '()))])
+    (read-tokens in tokens
+                 (cons `(if ,(reverse then-exprs)
+                            ,(reverse else-exprs))
+                       exprs))))
 
 (define (read-syntax src in)
   (define datum `(module forthqk-mod forthqk/expander

@@ -1,0 +1,12 @@
+#lang forthqk
+
+: fib dup 0 = if drop 0 else dup 1 = if drop 1 else dup 1 - fib swap 2 - fib + then then ;
+
+0 fib . cr
+1 fib . cr
+2 fib . cr
+3 fib . cr
+4 fib . cr
+5 fib . cr
+
+30 fib . cr
