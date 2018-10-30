@@ -2,21 +2,15 @@
 (require racket/contract)
 (require (only-in racket/function identity))
 
-(define (tokenize [in (current-input-port)])
-  (define reversed (tokenize/reverse in))
-  (if (eof-object? reversed)
-      eof
-      (reverse reversed)))
-(provide/contract [tokenize (->* () (input-port?)
-                                 (or/c
-                                  (listof (or/c symbol? number? boolean?))
-                                  eof-object?))])
-
-(define (tokenize/reverse in)
+(define (tokenize in)
   (define tokens (parse-token in (open-output-string) '()))
   (if (eof-object? tokens)
       eof
-      (map token->value tokens)))
+      (reverse tokens)))
+(provide/contract [tokenize
+                   (-> input-port?
+                       (or/c (listof string?)
+                             eof-object?))])
 
 (define (parse-token in token-port tokens)
   (define c (read-char in))
@@ -56,10 +50,3 @@
      (skip-whitespace in tokens)]
     [else
      (parse-token in (open-output-string) tokens)]))
-
-(define (token->value token)
-  (cond
-    [(string->number token) => identity]
-    [(string=? token "#t") #t]
-    [(string=? token "#f") #f]
-    [else (string->symbol token)]))

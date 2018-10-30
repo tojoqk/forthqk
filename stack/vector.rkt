@@ -1,35 +1,37 @@
-#lang racket
-(require racket/contract)
+#lang typed/racket
+(require racket/fixnum)
 
-(struct stack ([index #:mutable] data))
-(define (make-stack [n 2048])
-  (stack 0 (make-vector n)))
-(provide/contract [make-stack (->* () (natural?) stack?)])
+(struct stack ([index : Fixnum]
+               [data : (Vectorof Fixnum)])
+  #:mutable)
+(provide stack)
 
-(define (stack-size stack)
-  (stack-index stack))
+(: make-stack (-> stack))
+(define (make-stack)
+  (stack 0 (make-vector 4096)))
+(provide make-stack)
 
-(define (stack-empty? s)
-  (zero? (stack-index s)))
-
-(define (stack-full? s)
-  (= (stack-index s) (vector-length (stack-data s))))
-
+(: stack-push! (-> stack Fixnum Void))
 (define (stack-push! s v)
-  (match-define (stack idx dat) s)
-  (vector-set! dat idx v)
-  (set-stack-index! s (add1 idx)))
+  (let ([idx (stack-index s)]
+        [dat (stack-data s)])
+    (vector-set! dat idx v)
+    (set-stack-index! s (fx+ idx 1))))
 (provide stack-push!)
 
+(: stack-pop! (-> stack Fixnum))
 (define (stack-pop! s)
-  (match-define (stack idx dat) s)
-  (begin0 (vector-ref dat (sub1 idx))
-    (set-stack-index! s (sub1 idx))))
+  (let ([idx (stack-index s)]
+        [dat (stack-data s)])
+    (begin0 (vector-ref dat (fx- idx 1))
+      (set-stack-index! s (fx- idx 1)))))
 (provide stack-pop!)
 
-(define/contract (stack->list s)
-  (-> stack? list)
-  (match-define (stack idx dat) s)
-  (for/list ([i (range (sub1 idx) -1 -1)])
-    (vector-ref dat i)))
+(: stack->list (-> stack (Listof Fixnum)))
+(define (stack->list s)
+  (let ([idx (stack-index s)]
+        [dat (stack-data s)])
+    (reverse
+     (for/list ([i idx])
+       (vector-ref dat i)))))
 (provide stack->list)

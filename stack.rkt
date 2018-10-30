@@ -1,3 +1,3 @@
 #lang racket
-(require "stack/list.rkt")
-(provide (all-from-out "stack/list.rkt"))
+(require "stack/vector.rkt")
+(provide (all-from-out "stack/vector.rkt"))
