@@ -97,7 +97,7 @@
       (values y x))
 
     (define/forthqk (rot x y z) wt 3
-      (values y z x))
+      (values z x y))
 
     (define/forthqk (over x y) wt 3
       (values x y x))
