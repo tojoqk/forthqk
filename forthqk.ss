@@ -33,11 +33,10 @@
     (let loop ([i (- idx 1)]
                [acc '()])
       (if (< i 0)
-          (reverse acc)
-          (loop (- i idx)
-                (loop (- i 1)
-                      (cons (vector-ref data i)
-                            acc)))))))
+          acc
+          (loop (- i 1)
+                (cons (vector-ref data i)
+                      acc))))))
 
 (define-record-type (state make-state state?)
   (fields
@@ -133,15 +132,6 @@
     [(string=? token "#t") #t]
     [(string=? token "#f") #f]
     [else (string->symbol token)]))
-
-(define (read-all in)
-  (let loop ([result (read in)]
-             [exprs '()])
-    (cond
-      [(eof-object? result) exprs]
-      [else
-       (loop (read in)
-             (append exprs result))])))
 
 (define (read in)
   (define tokens (tokenize in))
@@ -329,15 +319,15 @@
 
 (define repl
   (case-lambda
-    [(in)
-     (let loop ([state (initial-state)])
-       (flush-output-port (current-output-port))
-       (let ([result (read in)])
-         (cond
-          [(eof-object? result) 'done]
-          [else
-           (loop (eval result state))])))]
-    [()
-     (repl (current-input-port))]))
+   [(in)
+    (let loop ([state (initial-state)])
+      (flush-output-port (current-output-port))
+      (let ([result (read in)])
+        (cond
+         [(eof-object? result) 'done]
+         [else
+          (loop (eval result state))])))]
+   [()
+    (repl (current-input-port))]))
 
 (repl)
