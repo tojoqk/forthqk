@@ -81,15 +81,18 @@
     (define/forthqk (+ x y) wt 1
       (+ x y))
     (define/forthqk (+ x y) wt 1
-      (fx+ x y))
+      (+ x y))
     (define/forthqk (* x y) wt 1
-      (fx* x y))
+      (* x y))
     (define/forthqk (- x y) wt 1
-      (fx- x y))
+      (- x y))
     (define/forthqk (= x y) wt 1
       (if (= x y) 1 0))
     (define/forthqk (< x y) wt 1
       (if (< x y) 1 0))
+
+    (define/forthqk (> x y) wt 1
+      (if (> x y) 1 0))
 
     (define/forthqk (swap x y) wt 2
       (values y x))
