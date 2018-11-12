@@ -133,15 +133,6 @@
     [(string=? token "#f") #f]
     [else (string->symbol token)]))
 
-(define (read-all in)
-  (let loop ([result (read in)]
-             [exprs '()])
-    (cond
-      [(eof-object? result) exprs]
-      [else
-       (loop (read in)
-             (append exprs result))])))
-
 (define (read in)
   (define tokens (tokenize in))
   (if (eof-object? tokens)
